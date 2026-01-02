@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Exposure Scanner</title>
+
+<style>
+/* NEON ANIMATED BACKGROUND */
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    color: #fff;
+    background: linear-gradient(270deg, #ff00cc, #3333ff, #00ffcc);
+    background-size: 600% 600%;
+    animation: neonBG 12s ease infinite;
+}
+
+@keyframes neonBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.container {
+    max-width: 720px;
+    margin: auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    font-weight: 700;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    background: #000;
+    color: #00ffcc;
+    border: 2px solid #00ffcc;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #00ffcc;
+    color: #000;
+}
+
+.section {
+    margin-top: 25px;
+    padding: 15px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.5);
+}
+
+.risk {
+    margin-bottom: 10px;
+}
+
+.low { color: #7CFF7C; }
+.medium { color: #FFD966; }
+.high { color: #FF6B6B; }
+
+footer {
+    margin-top: 40px;
+    text-align: center;
+    font-style: italic;
+    opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h1>What Risks Do I Have?</h1>
+
+    <button onclick="runScan()">Scan My Risks</button>
+
+    <div id="results"></div>
+
+    <footer>
+        <i>Created by Animesh</i>
+    </footer>
+</div>
+
+<script>
+function runScan() {
+    const r = document.getElementById("results");
+    r.innerHTML = "";
+
+    addSection("Network & Connection Risks", [
+        checkHTTPS(),
+        checkWebRTC(),
+        checkIPv6(),
+        checkReferrer()
+    ]);
+
+    addSection("Browser Privacy Risks", [
+        checkCookies(),
+        checkFingerprintSurface(),
+        checkBatteryAPI()
+    ]);
+
+    addSection("Device Exposure Signals", [
+        checkSensors(),
+        checkClipboard(),
+        checkBackgroundExecution()
+    ]);
+
+    addSection("What You Should Act On", [
+        actionableAdvice()
+    ]);
+}
+
+function addSection(title, items) {
+    const div = document.createElement("div");
+    div.className = "section";
+    div.innerHTML = `<h2>${title}</h2>` + items.join("");
+    document.getElementById("results").appendChild(div);
+}
+
+/* -------- CHECKS -------- */
+
+function checkHTTPS() {
+    return navigator.userAgent.includes("Chrome") && location.protocol !== "https:"
+        ? risk("High", "Page is not using HTTPS – network interception possible.")
+        : risk("Low", "Secure HTTPS connection in use.");
+}
+
+function checkWebRTC() {
+    return window.RTCPeerConnection
+        ? risk("Medium", "WebRTC enabled – IP leaks possible via browsers.")
+        : risk("Low", "WebRTC not exposed.");
+}
+
+function checkIPv6() {
+    return navigator.connection && navigator.connection.type !== "none"
+        ? risk("Medium", "IPv6 may expose your real IP even with VPN.")
+        : risk("Low", "No IPv6 exposure detected.");
+}
+
+function checkReferrer() {
+    return document.referrer
+        ? risk("Medium", "Referrer data is shared between sites.")
+        : risk("Low", "No referrer leakage detected.");
+}
+
+function checkCookies() {
+    return navigator.cookieEnabled
+        ? risk("Medium", "Cookies enabled – cross-site tracking possible.")
+        : risk("Low", "Cookies disabled.");
+}
+
+function checkFingerprintSurface() {
+    let entropy = navigator.platform + navigator.languages + screen.width;
+    return entropy.length > 20
+        ? risk("Medium", "Your browser exposes fingerprintable attributes.")
+        : risk("Low", "Low fingerprinting surface.");
+}
+
+function checkBatteryAPI() {
+    return navigator.getBattery
+        ? risk("Medium", "Battery API available – tracking vector.")
+        : risk("Low", "Battery API blocked.");
+}
+
+function checkSensors() {
+    return window.DeviceMotionEvent
+        ? risk("Medium", "Motion sensors accessible.")
+        : risk("Low", "Motion sensors restricted.");
+}
+
+function checkClipboard() {
+    return navigator.clipboard
+        ? risk("Medium", "Clipboard access supported by browser.")
+        : risk("Low", "Clipboard access restricted.");
+}
+
+function checkBackgroundExecution() {
+    return document.hidden !== undefined
+        ? risk("Medium", "Background tab execution possible.")
+        : risk("Low", "Background execution limited.");
+}
+
+function actionableAdvice() {
+    return `
+    <div class="risk high">
+        • Use a privacy-focused browser<br>
+        • Disable WebRTC if not needed<br>
+        • Review app & extension permissions<br>
+        • Use DNS-over-HTTPS<br>
+        • Keep OS and browser updated
+    </div>`;
+}
+
+function risk(level, text) {
+    const cls = level === "High" ? "high" : level === "Medium" ? "medium" : "low";
+    return `<div class="risk ${cls}"><b>${level} Risk:</b> ${text}</div>`;
+}
+</script>
+</body>
+</html>
